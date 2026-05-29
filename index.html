@@ -429,6 +429,69 @@
       .fu,.fl,.fr { opacity:1; transform:none; transition:none; }
       .mq-track { animation:none; }
     }
+
+    /* ── EFEITOS EXTRAS ──────────────────────────────────────── */
+
+    /* 1. Shimmer sweep nos títulos ao entrar na viewport */
+    @keyframes shimmerSweep {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    .s-title.shimmer-on {
+      background: linear-gradient(90deg, var(--ouro-3) 20%, var(--ouro-2) 50%, var(--ouro-3) 80%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmerSweep 1.6s linear;
+    }
+
+    /* 2. Pulso suave no botão CTA do header */
+    @keyframes pulseGold {
+      0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+      50%      { box-shadow: 0 0 0 6px rgba(201,168,76,0.22); }
+    }
+    .nav-cta { animation: pulseGold 2.8s ease infinite; }
+
+    /* 3. Brilho animado no hero eyebrow badge */
+    @keyframes badgeGlow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+      50%      { box-shadow: 0 0 12px 2px rgba(201,168,76,0.25); }
+    }
+    .hero-eyebrow { animation: badgeGlow 3s ease infinite; }
+
+    /* 4. Linha gradiente superior dos glass cards — sweep infinito */
+    @keyframes lineSweep {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    .glass::after {
+      background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.6) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: lineSweep 4s linear infinite;
+    }
+
+    /* 5. Tilt 3D — preserva transform-style */
+    .tilt { transform-style: preserve-3d; will-change: transform; transition: transform .15s ease, box-shadow .2s; }
+
+    /* 6. Stagger nos itens do bento (delay via JS inline) */
+    .bento-card { transition: transform .18s ease, box-shadow .2s, border-color .2s; }
+
+    /* 7. Animated scan line no hero */
+    @keyframes scanLine {
+      0%   { top: -4%; opacity: .5; }
+      100% { top: 104%; opacity: 0; }
+    }
+    #hero .scan-line {
+      position: absolute; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.2), transparent);
+      pointer-events: none; z-index: 1;
+      animation: scanLine 6s linear infinite;
+    }
+
+    /* 8. Contadores — número brilha quando termina */
+    @keyframes numPop { 0%{transform:scale(1)} 50%{transform:scale(1.15);color:var(--ouro-2)} 100%{transform:scale(1)} }
+    .ctr.done { animation: numPop .4s ease; }
   </style>
 </head>
 <body>
@@ -475,6 +538,7 @@
 
 <!-- ══ HERO ══ -->
 <section id="hero" aria-label="Apresentação">
+  <div class="scan-line" aria-hidden="true"></div>
   <div class="container hero-inner">
 
     <div class="hero-text">
@@ -995,23 +1059,127 @@
     upd();
   })();
 
-  // Counters
+
+  // ── EFEITO 1: Partículas douradas no hero ──────────────────────────────
   (function() {
-    const els = document.querySelectorAll('.ctr');
-    const io2 = new IntersectionObserver(es => {
+    const hero = document.getElementById('hero');
+    if (!hero) return;
+    const cv = document.createElement('canvas');
+    cv.setAttribute('aria-hidden','true');
+    cv.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:0;width:100%;height:100%';
+    hero.appendChild(cv);
+    const cx = cv.getContext('2d');
+    let W, H, pts = [];
+    const COLS = ['rgba(201,168,76,','rgba(232,200,96,','rgba(160,120,48,'];
+    function resize() { W = cv.width = cv.offsetWidth; H = cv.height = cv.offsetHeight; }
+    function Pt() {
+      this.reset = function() {
+        this.x = Math.random() * W; this.y = H + 10;
+        this.vx = (Math.random() - .5) * .35; this.vy = -(Math.random() * .55 + .15);
+        this.r = Math.random() * 1.4 + .3; this.life = 0;
+        this.decay = Math.random() * .0025 + .0008;
+        this.col = COLS[Math.floor(Math.random() * COLS.length)];
+      };
+      this.reset(); this.y = Math.random() * H; this.life = Math.random();
+    }
+    function frame() {
+      cx.clearRect(0,0,W,H);
+      pts.forEach(p => {
+        p.life += p.decay; if (p.life >= 1) p.reset();
+        const a = p.life < .2 ? p.life/.2 : p.life > .8 ? (1-p.life)/.2 : 1;
+        cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        cx.fillStyle = p.col + (a*.65)+')'; cx.fill();
+        p.x += p.vx; p.y += p.vy;
+      });
+      requestAnimationFrame(frame);
+    }
+    resize(); pts = Array.from({length:45}, () => new Pt()); frame();
+    window.addEventListener('resize', resize, {passive:true});
+  })();
+
+  // ── EFEITO 2: Mouse spotlight nos glass cards ──────────────────────────
+  (function() {
+    if (window.matchMedia('(hover:none)').matches) return;
+    document.querySelectorAll('.glass, .hcard, .tl-item, .ct-item, .pillar, .seg-pill').forEach(el => {
+      el.addEventListener('mousemove', e => {
+        const r = el.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        el.style.background = `radial-gradient(260px at ${x}px ${y}px, rgba(201,168,76,0.09) 0%, transparent 55%), var(--glass)`;
+      });
+      el.addEventListener('mouseleave', () => { el.style.background = ''; });
+    });
+  })();
+
+  // ── EFEITO 3: Tilt 3D nos cards ──────────────────────────────────────
+  (function() {
+    if (window.matchMedia('(hover:none)').matches) return;
+    function addTilt(sel, deg) {
+      document.querySelectorAll(sel).forEach(card => {
+        card.classList.add('tilt');
+        card.addEventListener('mousemove', e => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left - r.width  / 2) / r.width;
+          const y = (e.clientY - r.top  - r.height / 2) / r.height;
+          card.style.transform = `perspective(700px) rotateX(${-y*deg}deg) rotateY(${x*deg}deg) translateY(-4px) scale(1.015)`;
+        });
+        card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+      });
+    }
+    addTilt('.bento-card', 5);
+    addTilt('.hcard', 5);
+    addTilt('.mvv-card', 4);
+    addTilt('.prod-card', 6);
+  })();
+
+  // ── EFEITO 4: Shimmer sweep nos títulos ao entrar na viewport ────────
+  (function() {
+    const titles = document.querySelectorAll('.s-title');
+    const io = new IntersectionObserver(es => {
       es.forEach(e => {
         if (!e.isIntersecting) return;
-        const el = e.target, t = +el.dataset.t, s = el.dataset.s || '';
-        const steps = 1400 / 16; let c = 0;
-        const tick = setInterval(() => {
-          c += t / steps;
-          if (c >= t) { c = t; clearInterval(tick); }
-          el.textContent = Math.floor(c) + s;
-        }, 16);
-        io2.unobserve(el);
+        e.target.classList.add('shimmer-on');
+        io.unobserve(e.target);
       });
     }, { threshold: .5 });
-    els.forEach(el => io2.observe(el));
+    titles.forEach(t => io.observe(t));
+  })();
+
+  // ── EFEITO 5: Stagger de entrada nos cards do bento ──────────────────
+  (function() {
+    document.querySelectorAll('.bento .bento-card').forEach((c, i) => {
+      c.style.transitionDelay = (i * 0.06) + 's';
+    });
+    const io = new IntersectionObserver(es => {
+      es.forEach(e => {
+        if (!e.isIntersecting) return;
+        e.target.querySelectorAll('.bento-card').forEach((c, i) => {
+          setTimeout(() => c.classList.add('v'), i * 60);
+        });
+        io.unobserve(e.target);
+      });
+    }, { threshold: .05 });
+    document.querySelectorAll('.bento').forEach(b => { b.querySelectorAll('.bento-card').forEach(c => { c.classList.add('fu'); }); io.observe(b); });
+  })();
+
+  // ── EFEITO 6: Pop nos contadores ao terminar ─────────────────────────
+  (function() {
+    const orig = document.querySelectorAll('.ctr');
+    orig.forEach(el => {
+      const t = +el.dataset.t, s = el.dataset.s || '';
+      const steps = 1400/16; let c = 0;
+      const io = new IntersectionObserver(es => {
+        es.forEach(e => {
+          if (!e.isIntersecting) return;
+          const tick = setInterval(() => {
+            c += t/steps;
+            if (c >= t) { c = t; clearInterval(tick); el.classList.add('done'); setTimeout(() => el.classList.remove('done'), 500); }
+            el.textContent = Math.floor(c) + s;
+          }, 16);
+          io.unobserve(el);
+        });
+      }, {threshold:.5});
+      io.observe(el);
+    });
   })();
 
   // LGPD
