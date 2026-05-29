@@ -274,8 +274,8 @@
 
     /* ── SERVIÇOS (BENTO) ── */
     #servicos { padding: 120px 0; background: var(--bg-2); }
-    .bento { display: grid; grid-template-columns: repeat(4,1fr); grid-auto-rows: 220px; gap: 16px; }
-    .bento-card { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+    .bento { display: grid; grid-template-columns: repeat(4,1fr); grid-auto-rows: minmax(180px, auto); gap: 16px; }
+    .bento-card { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; }
     .bento-large { grid-column: span 2; grid-row: span 2; }
     .bento-wide  { grid-column: span 2; }
     .bento-num { font-family: var(--ff); font-size: 4.5rem; font-weight: 800; color: rgba(201,168,76,.1); line-height: 1; margin-bottom: 16px; }
@@ -397,7 +397,7 @@
       .bento       { grid-template-columns: repeat(2, 1fr); grid-auto-rows: auto; gap: 12px; }
       .bento-large { grid-column: span 2; grid-row: auto; }
       .bento-wide  { grid-column: span 2; }
-      .bento-card  { min-height: 180px; }
+      .bento-card  { min-height: unset; }
 
       /* Produtos */
       .prod-grid   { grid-template-columns: repeat(4, 1fr); gap: 12px; }
