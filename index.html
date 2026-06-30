@@ -106,7 +106,7 @@
       position: relative; overflow: hidden;
       background-color: var(--bg);
       background-image:
-        linear-gradient(135deg, rgba(8,8,8,0.92) 0%, rgba(14,14,8,0.85) 60%, rgba(20,16,4,0.90) 100%),
+        linear-gradient(135deg, rgba(4,4,4,0.96) 0%, rgba(8,8,4,0.93) 60%, rgba(12,10,2,0.95) 100%),
         url('images/bg-hero.jpg');
       background-size: cover;
       background-position: center;
@@ -153,6 +153,13 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+    .hero-logo-img {
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 4px 24px rgba(201,168,76,0.35));
     }
     .hero-sub {
       font-size: clamp(.9rem, 1.5vw, 1.05rem);
@@ -748,7 +755,7 @@
         Tecnologia empresarial · desde 2006
       </div>
       <h1 class="hero-h1">
-        Info<br><span class="grad">Solução</span>
+        <img src="images/logo.png" alt="Info Solução" class="hero-logo-img" />
       </h1>
       <p class="hero-sub">Especialistas em sistemas de gestão empresarial, automação comercial e consultoria fiscal. Ajudamos sua empresa a organizar, controlar e crescer.</p>
       <p class="hero-slogan">"Desde 2006, transformando tecnologia em resultados."</p>
